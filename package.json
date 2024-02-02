@@ -1,0 +1,34 @@
+{
+  "name": "sendgrid-template-manager",
+  "version": "1.0.0",
+  "description": "CLI tool for managing sendgrid templates",
+  "main": "./dist/index.js",
+  "bin": {
+    "stm": "./stm.js"
+  },
+  "dependencies": {
+    "@sendgrid/client": "^8.1.0",
+    "@types/node": "^20.11.16",
+    "commander": "^11.1.0",
+    "dotenv": "^16.4.1",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "prepare": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Helveg/sendgrid-template-manager.git"
+  },
+  "author": "Robin De Schepper",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Helveg/sendgrid-template-manager/issues"
+  },
+  "homepage": "https://github.com/Helveg/sendgrid-template-manager#readme",
+  "devDependencies": {
+    "prettier": "^3.2.4",
+    "rimraf": "^5.0.5"
+  }
+}
