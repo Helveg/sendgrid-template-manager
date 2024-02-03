@@ -40,3 +40,23 @@ export function getTargetModule(container: Element) {
   }
   return elem;
 }
+
+function getPreheaderElement(dom: JSDOM) {
+  const elem = dom.window.document.querySelector(
+    "[data-type=preheader] [role=module-content] > p",
+  );
+  if (elem === null) {
+    throw new STMError("Preheader element not found", {
+      code: "template.no-preheader",
+    });
+  }
+  return elem;
+}
+
+export function getPreheader(dom: JSDOM) {
+  return getPreheaderElement(dom).innerHTML;
+}
+
+export function setPreheader(dom: JSDOM, preheader: string) {
+  getPreheaderElement(dom).innerHTML = preheader;
+}

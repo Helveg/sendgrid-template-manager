@@ -1,6 +1,6 @@
 import {
   checkTarget,
-  insertModules,
+  insertChanges,
   listDesigns,
 } from "../designs/design.util.js";
 import { STMError } from "../errors.js";
@@ -8,7 +8,7 @@ import {
   filterContentTemplates,
   findVersion,
   listTemplates,
-  retrieveModules,
+  retrieveChanges,
   updateVersion,
 } from "../templates/template.util.js";
 import { Design } from "../designs/design.interfaces.js";
@@ -116,7 +116,7 @@ async function fetchTemplatesTask(
         [id, templates.find((t) => t.id === id || t.name === id)] as const,
     );
     const notFound = templateSearch
-      .filter(([id, t]) => !!t)
+      .filter(([id, t]) => !t)
       .map(([id, t]) => `'${id}'`);
     if (notFound.length) {
       throw new STMError(`Unknown template(s): ${notFound.join(", ")}`, {
@@ -168,24 +168,26 @@ async function applyDesign(
   template: Template,
   options: ApplyOptions,
 ) {
-  const modules = await retrieveModules(client, template);
-  const newVersion = await insertModules(design, modules);
+  const changes = await retrieveChanges(client, template);
+  const newVersion = await insertChanges(design, changes);
   const existingVersion = findVersion(template, options.tag);
+  const contentVersion = findVersion(template)!;
   if (existingVersion) {
     return await updateVersion(client, template, {
       id: existingVersion.id,
       html_content: newVersion,
       active: +((existingVersion.active || options.activate) ?? 0) as 0 | 1,
+      subject: contentVersion.subject || existingVersion.subject,
     });
   } else {
     const data = {
       template_id: template.id,
-      active: +(options.activate ?? 0),
+      active: +(options.activate ?? 0) as 0 | 1,
       name: options.tag,
       html_content: newVersion,
       generate_plain_content: true,
-      subject: findVersion(template)?.subject ?? "",
-      editor: "design",
+      subject: contentVersion.subject ?? "",
+      editor: contentVersion.editor,
     };
 
     const [response] = (await client.request({

@@ -6,7 +6,12 @@ import {
 } from "./template.interfaces.js";
 import { Client } from "@sendgrid/client";
 import { STMError } from "../errors.js";
-import { getAllModules, getModuleContainer, makeDom } from "../dom.util.js";
+import {
+  getAllModules,
+  getModuleContainer,
+  getPreheader,
+  makeDom,
+} from "../dom.util.js";
 
 export async function listTemplates(client: Client) {
   const [response] = (await client.request({
@@ -41,9 +46,12 @@ export async function retrieveContentVersion(
   return response.body;
 }
 
-export async function retrieveModules(client: Client, template: Template) {
+export async function retrieveChanges(client: Client, template: Template) {
   const dom = makeDom(await retrieveContentVersion(client, template));
-  return getAllModules(getModuleContainer(dom));
+  return {
+    modules: getAllModules(getModuleContainer(dom)),
+    preheader: getPreheader(dom),
+  };
 }
 
 export function filterContentTemplates(templates: Template[]) {

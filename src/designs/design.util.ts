@@ -4,7 +4,12 @@ import {
   DesignResponse,
   ListDesignOptions,
 } from "./design.interfaces.js";
-import { getModuleContainer, getTargetModule, makeDom } from "../dom.util.js";
+import {
+  getModuleContainer,
+  getTargetModule,
+  makeDom,
+  setPreheader,
+} from "../dom.util.js";
 
 export async function listDesigns(
   client: Client,
@@ -18,10 +23,13 @@ export async function listDesigns(
   return response.body.result;
 }
 
-export async function insertModules(design: Design, modules: Element[]) {
+export async function insertChanges(
+  design: Design,
+  { modules, preheader }: { modules: Element[]; preheader: string },
+) {
   if (!design.html_content) {
     throw Error(
-      "insertModules called on Design which was fetched with summary=true.",
+      "insertChanges called on Design which was fetched with summary=true.",
     );
   }
   const dom = makeDom(design);
@@ -30,6 +38,7 @@ export async function insertModules(design: Design, modules: Element[]) {
   modules.forEach((module) =>
     target.insertAdjacentElement("beforebegin", module),
   );
+  setPreheader(dom, preheader);
   target.remove();
   return dom.serialize();
 }
