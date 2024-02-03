@@ -184,7 +184,7 @@ async function applyDesign(
       name: options.tag,
       html_content: newVersion,
       generate_plain_content: true,
-      subject: "",
+      subject: findVersion(template)?.subject ?? "",
       editor: "design",
     };
 
