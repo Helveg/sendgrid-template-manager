@@ -7,8 +7,10 @@ dotenv.config();
 const program = new Command();
 
 program
-  .name("STM")
-  .description("CLI tool to manage SendGrid email templates")
+  .name("sgtm")
+  .description(
+    "SendGrid Template Manager: A community CLI tool to manage SendGrid email templates.",
+  )
   .version("1.0.0")
   .option("--key <string>", "The SendGrid API key");
 
