@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
 import { Argument, Command } from "commander";
-import { listDesignsCommand } from "./commands/list-designs.command";
+import { listAssetsCommand } from "./commands/list-assets.command";
 import { STMError } from "./errors";
+import { applyCommand } from "./commands/apply.command";
 
 dotenv.config();
 
@@ -46,6 +47,15 @@ program
       .argOptional(),
   )
   .description("List the assets.")
-  .action(optionCascade(listDesignsCommand));
+  .action(handlerHandler(listAssetsCommand));
+
+program
+  .command("apply")
+  .description("Apply a design to one or more templates")
+  .argument("<design>")
+  .argument("[templates...]")
+  .option("-t, --tag", "The version name to create/update", "latest")
+  .option("--activate", "Toggle to immediately activate the new version.")
+  .action(handlerHandler(applyCommand));
 
 program.parse();
