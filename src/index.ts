@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { Argument, Command } from "commander";
 import { listDesignsCommand } from "./commands/list-designs.command";
+import { STMError } from "./errors";
 
 dotenv.config();
 
@@ -14,15 +15,26 @@ program
   .version("1.0.0")
   .option("--key <string>", "The SendGrid API key");
 
-function optionCascade(f: Function) {
-  return (...args: any[]) => {
+function handlerHandler(f: Function) {
+  return async (...args: any[]) => {
     let [options, command] = args.slice(-2) as [NonNullable<unknown>, Command];
     let c = command;
     while ((c = c.parent!)) {
       options = { ...options, ...c.opts() };
     }
     args[args.length - 2] = options;
-    return f.apply(undefined, args);
+    try {
+      return await f.apply(undefined, args);
+    } catch (e) {
+      if (e instanceof STMError) {
+        program.error(e.message, {
+          exitCode: e.info.exitCode ?? 1,
+          code: e.info.code,
+        });
+      } else {
+        throw e;
+      }
+    }
   };
 }
 
