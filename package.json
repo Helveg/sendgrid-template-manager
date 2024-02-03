@@ -1,10 +1,10 @@
 {
-  "name": "sendgrid-template-manager",
-  "version": "1.0.0",
-  "description": "CLI tool for managing sendgrid templates",
+  "name": "sgtm",
+  "version": "0.1.0",
+  "description": "SendGrid Template Manager",
   "main": "./dist/index.js",
   "bin": {
-    "stm": "./stm.js"
+    "sgtm": "sgtm.js"
   },
   "dependencies": {
     "@sendgrid/client": "^8.1.0",
@@ -15,7 +15,7 @@
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "prepare": "tsc",
+    "prepare": "rimraf ./dist && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
