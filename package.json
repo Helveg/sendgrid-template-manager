@@ -11,9 +11,11 @@
     "@sendgrid/client": "^8.1.0",
     "@types/node": "^20.11.16",
     "commander": "^11.1.0",
+    "deepmerge-ts": "^5.1.0",
     "dotenv": "^16.4.1",
+    "is-unicode-supported": "^2.0.0",
     "jsdom": "^24.0.0",
-    "listr": "^0.14.3",
+    "listr2": "^8.0.2",
     "typescript": "^5.3.3"
   },
   "scripts": {
