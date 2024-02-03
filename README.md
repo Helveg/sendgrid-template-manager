@@ -20,14 +20,14 @@ an **empty** Text module somewhere. This is where the Template Content Version w
 inserted.
 
 <p align="center">
-    <img src="./docs/DesignLibrary.png" width="400" alt="An example of the Design Library, containing the Designs" />
+    <img src="./docs/DesignLibrary.png" width="800" alt="An example of the Design Library, containing the Designs" />
 </p>
 
 Template Content Versions are versions of a Template with the name `__content__`. The
 entirety of the TCV will be inserted into the Design.
 
 <p align="center">
-    <img src="./docs/TCV.png" width="400" alt="An example of a Template with the __content__ Template Content Version" />
+    <img src="./docs/TCV.png" width="800" alt="An example of a Template with the __content__ Template Content Version" />
 </p>
 
 The result of the merger will be stored in a new/updated version in the same Template.
