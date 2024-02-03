@@ -24,9 +24,9 @@ export function getAllModules(container: Element) {
   return [...container.querySelectorAll(`:scope > [role=module]`)];
 }
 
-export function getTargetModule(container: Element, type: string) {
+export function getTargetModule(container: Element) {
   const elem = [
-    ...container.querySelectorAll(`[role=module][data-type=${type}]`),
+    ...container.querySelectorAll(`[role=module][data-type=text]`),
   ].find(
     (elem) =>
       elem.querySelector("[role=module-content]")?.innerHTML ===
