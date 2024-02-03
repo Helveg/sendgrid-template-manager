@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 import { Argument, Command } from "commander";
-import { listAssetsCommand } from "./commands/list-assets.command";
-import { STMError } from "./errors";
-import { applyCommand } from "./commands/apply.command";
+import { listAssetsCommand } from "./commands/list-assets.command.js";
+import { STMError } from "./errors.js";
+import { applyCommand } from "./commands/apply.command.js";
 
 dotenv.config();
 

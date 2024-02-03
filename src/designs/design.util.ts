@@ -1,6 +1,10 @@
 import { Client } from "@sendgrid/client";
-import { Design, DesignResponse, ListDesignOptions } from "./design.interfaces";
-import { getModuleContainer, getTargetModule, makeDom } from "../dom.util";
+import {
+  Design,
+  DesignResponse,
+  ListDesignOptions,
+} from "./design.interfaces.js";
+import { getModuleContainer, getTargetModule, makeDom } from "../dom.util.js";
 
 export async function listDesigns(
   client: Client,

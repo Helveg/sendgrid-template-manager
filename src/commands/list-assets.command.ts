@@ -1,10 +1,10 @@
-import { makeClient } from "../client";
+import { makeClient } from "../client.js";
 import {
   filterContentTemplates,
   listTemplates,
-} from "../templates/template.util";
+} from "../templates/template.util.js";
 import { Client } from "@sendgrid/client";
-import { listDesigns } from "../designs/design.util";
+import { listDesigns } from "../designs/design.util.js";
 
 export async function listAssetsCommand(
   type: "designs" | "templates" | undefined,

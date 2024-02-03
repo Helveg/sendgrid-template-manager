@@ -1,7 +1,7 @@
-import { Design } from "./designs/design.interfaces";
-import { TemplateVersion } from "./templates/template.interfaces";
+import { Design } from "./designs/design.interfaces.js";
+import { TemplateVersion } from "./templates/template.interfaces.js";
 import { JSDOM } from "jsdom";
-import { STMError } from "./errors";
+import { STMError } from "./errors.js";
 
 export function makeDom(html: Design | TemplateVersion): JSDOM {
   return new JSDOM(html.html_content);

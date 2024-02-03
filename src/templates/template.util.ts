@@ -3,10 +3,10 @@ import {
   TemplateResponse,
   TemplateVersion,
   TemplateVersionResponse,
-} from "./template.interfaces";
+} from "./template.interfaces.js";
 import { Client } from "@sendgrid/client";
-import { STMError } from "../errors";
-import { getAllModules, getModuleContainer, makeDom } from "../dom.util";
+import { STMError } from "../errors.js";
+import { getAllModules, getModuleContainer, makeDom } from "../dom.util.js";
 
 export async function listTemplates(client: Client) {
   const [response] = (await client.request({

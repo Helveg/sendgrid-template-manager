@@ -2,7 +2,8 @@
   "name": "sgtm",
   "version": "0.1.2",
   "description": "SendGrid Template Manager",
-  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "type": "module",
   "bin": {
     "sgtm": "sgtm.js"
   },

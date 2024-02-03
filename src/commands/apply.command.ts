@@ -1,19 +1,19 @@
-import { makeClient } from "../client";
-import { insertModules, listDesigns } from "../designs/design.util";
-import { STMError } from "../errors";
+import { makeClient } from "../client.js";
+import { insertModules, listDesigns } from "../designs/design.util.js";
+import { STMError } from "../errors.js";
 import {
   filterContentTemplates,
   findVersion,
   listTemplates,
   retrieveModules,
   updateVersion,
-} from "../templates/template.util";
-import { Design } from "../designs/design.interfaces";
+} from "../templates/template.util.js";
+import { Design } from "../designs/design.interfaces.js";
 import {
   Template,
   TemplateVersion,
   TemplateVersionResponse,
-} from "../templates/template.interfaces";
+} from "../templates/template.interfaces.js";
 import { Client } from "@sendgrid/client";
 
 export interface ApplyOptions {
