@@ -11,8 +11,10 @@ export interface Template {
 export interface TemplateVersion {
   id: string;
   template_id: string;
-  active: boolean;
+  active: 0 | 1;
   name: string;
+  html_content: string;
+  plain_content: string;
   generate_plain_content: boolean;
   subject: string;
   updated_at: string;
@@ -23,3 +25,4 @@ export interface TemplateVersion {
 export type TemplateResponse = Response<{
   templates: Template[];
 }>;
+export type TemplateVersionResponse = Response<TemplateVersion>;
