@@ -7,7 +7,7 @@ import { Client } from "@sendgrid/client";
 import { listDesigns } from "../designs/design.util.js";
 import { color, ListrTaskWrapper } from "listr2";
 import { nameSort } from "../util.js";
-import { outputListFactory } from "../manager.js";
+import { createOutputListTasks } from "../manager.js";
 
 interface ListAssetsContext {
   client: Client;
@@ -17,7 +17,7 @@ export async function listAssetsCommand(
   type: "designs" | "templates" | undefined,
   options: { key?: string },
 ) {
-  const tasks = outputListFactory(
+  const tasks = createOutputListTasks(
     [
       {
         title: "Retrieve designs",

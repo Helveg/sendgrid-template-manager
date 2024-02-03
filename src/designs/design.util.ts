@@ -26,10 +26,16 @@ export async function insertModules(design: Design, modules: Element[]) {
   }
   const dom = makeDom(design);
   const container = getModuleContainer(dom);
-  const target = getTargetModule(container, "text");
+  const target = getTargetModule(container);
   modules.forEach((module) =>
     target.insertAdjacentElement("beforebegin", module),
   );
   target.remove();
   return dom.serialize();
+}
+
+export function checkTarget(design: Design) {
+  const dom = makeDom(design);
+  const container = getModuleContainer(dom);
+  getTargetModule(container);
 }

@@ -1,5 +1,8 @@
-import { makeClient } from "../client.js";
-import { insertModules, listDesigns } from "../designs/design.util.js";
+import {
+  checkTarget,
+  insertModules,
+  listDesigns,
+} from "../designs/design.util.js";
 import { STMError } from "../errors.js";
 import {
   filterContentTemplates,
@@ -11,10 +14,12 @@ import {
 import { Design } from "../designs/design.interfaces.js";
 import {
   Template,
-  TemplateVersion,
   TemplateVersionResponse,
 } from "../templates/template.interfaces.js";
 import { Client } from "@sendgrid/client";
+import { color, ListrTaskWrapper } from "listr2";
+import { makeClient } from "../client.js";
+import { runTasks } from "../manager.js";
 
 export interface ApplyOptions {
   verbose?: boolean;
@@ -23,27 +28,90 @@ export interface ApplyOptions {
   activate?: boolean;
 }
 
+interface ApplyContext {
+  templates: Template[];
+  client: Client;
+  designId: string;
+  templateIds: string[];
+  designs: Design[];
+  design: Design;
+  commandOptions: ApplyOptions;
+}
+
 export async function applyCommand(
-  designIdentifier: string,
-  templateIdentifiers: string[],
+  designId: string,
+  templateIds: string[],
   options: ApplyOptions,
 ) {
-  const client = makeClient(options);
-  const designs = await listDesigns(client, { summary: false });
-  const design = designs.find(
-    (design) =>
-      design.id === designIdentifier || design.name === designIdentifier,
+  await runTasks(
+    [
+      {
+        title: `Prepare '${designId}' design`,
+        task: prepareDesignTask,
+      },
+      {
+        title: `Fetch templates`,
+        task: fetchTemplatesTask,
+      },
+      {
+        title: `Update templates`,
+        task: updateTemplatesTask,
+      },
+    ],
+    {
+      client: makeClient(options),
+      designId,
+      templateIds,
+      commandOptions: options,
+    } as ApplyContext,
+    { exitOnError: true },
   );
-  if (!design) {
-    throw new STMError(`Unknown design '${designIdentifier}'`, {
-      code: "design.not-found",
-    });
-  }
-  const templates = await listTemplates(client);
+}
+
+async function prepareDesignTask(
+  ctx: ApplyContext,
+  task: ListrTaskWrapper<any, any, any>,
+) {
+  return task.newListr([
+    {
+      title: "Fetch designs",
+      task: async (_, task) => {
+        ctx.designs = await listDesigns(ctx.client, { summary: false });
+      },
+    },
+    {
+      title: `Filter designs`,
+      task: () => {
+        const design = ctx.designs.find(
+          (design) =>
+            design.id === ctx.designId || design.name === ctx.designId,
+        );
+        if (!design) {
+          throw new STMError(`Unknown design '${ctx.designId}'`, {
+            code: "design.not-found",
+          });
+        }
+        ctx.design = design;
+      },
+    },
+    {
+      title: `Find module injection location`,
+      task: () => {
+        checkTarget(ctx.design);
+      },
+    },
+  ]);
+}
+
+async function fetchTemplatesTask(
+  ctx: ApplyContext,
+  task: ListrTaskWrapper<any, any, any>,
+) {
+  const templates = await listTemplates(ctx.client);
   const contentTemplates = filterContentTemplates(templates);
   let applicableTemplates;
-  if (templateIdentifiers.length) {
-    const templateSearch = templateIdentifiers.map(
+  if (ctx.templateIds.length) {
+    const templateSearch = ctx.templateIds.map(
       (id) =>
         [id, templates.find((t) => t.id === id || t.name === id)] as const,
     );
@@ -59,50 +127,38 @@ export async function applyCommand(
       .filter(([, t]) => !contentTemplates.includes(t!))
       .map(([id, t]) => `'${id}'`);
     if (untagged.length) {
-      throw new STMError(
-        `The following template(s) are missing a version named '__content__': ${untagged.join(", ")}`,
-        { code: "template.no-content-version" },
-      );
+      throw new STMError(`Missing content versions: ${untagged.join(", ")}`, {
+        code: "template.no-content-version",
+      });
     }
     applicableTemplates = templateSearch.map(([, t]) => t!);
   } else {
     applicableTemplates = contentTemplates;
   }
   if (!applicableTemplates.length) {
-    throw new STMError("No applicable templates found.", {
+    throw new STMError("No applicable templates.", {
       code: "no-templates",
     });
   }
-  console.log(
-    `Applying design '${design.name}' [${design.id}] to the following ${applicableTemplates.length} templates:`,
-  );
-  console.log(
-    applicableTemplates.map((t) => `* ${t.name} [${t.id}]`).join("\n") + "\n",
-  );
-  console.log(" ...\n");
-  await Promise.all(
-    applicableTemplates.map(async (template) => {
-      let version: TemplateVersion | undefined = undefined;
-      let error: Error | undefined = undefined;
-      try {
-        version = await applyDesign(client, design, template, options);
-      } catch (e: any) {
-        error = e;
-      }
-      if (version) {
-        console.log(
-          `* [success] ${findVersion(template, version.name) ? "Updated" : "Created"} "${template.name}".${version.name}`,
-        );
-      } else if (error instanceof STMError) {
-        let msg = `* [error:${error.info.code}] ${template.name}`;
-        if (options.verbose) {
-          msg += `\n --> ${error.message}`;
-        }
-        console.log(msg);
-      } else {
-        throw error;
-      }
-    }),
+  ctx.templates = applicableTemplates;
+}
+
+async function updateTemplatesTask(
+  ctx: ApplyContext,
+  task: ListrTaskWrapper<any, any, any>,
+) {
+  return task.newListr(
+    ctx.templates.map((template) => ({
+      title: color.dim(`[${template.id}] `) + template.name,
+      task: () =>
+        applyDesign(ctx.client, ctx.design, template, ctx.commandOptions),
+    })),
+    {
+      concurrent: true,
+      rendererOptions: {
+        collapseSubtasks: false,
+      },
+    },
   );
 }
 
@@ -114,7 +170,7 @@ async function applyDesign(
 ) {
   const modules = await retrieveModules(client, template);
   const newVersion = await insertModules(design, modules);
-  const existingVersion = await findVersion(template, options.tag);
+  const existingVersion = findVersion(template, options.tag);
   if (existingVersion) {
     return await updateVersion(client, template, {
       id: existingVersion.id,
