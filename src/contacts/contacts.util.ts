@@ -43,7 +43,7 @@ export async function uploadContactCSV(
       .set(
         upload_headers.reduce(
           (acc, { header, value }) => {
-            acc[header] = value + "4";
+            acc[header] = value;
             return acc;
           },
           {} as Record<string, string>,

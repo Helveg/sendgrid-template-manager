@@ -5,6 +5,8 @@ import { STMError } from "./errors.js";
 import { applyCommand } from "./commands/apply.command.js";
 import { countContactsCommand } from "./commands/count-contacts.command.js";
 import { uploadContactsCommand } from "./commands/upload-contacts.command.js";
+import { listListsCommand } from "./commands/list-lists-command.js";
+import { deleteListsCommand } from "./commands/delete-lists-command.js";
 
 dotenv.config();
 
@@ -89,9 +91,23 @@ contactGroup
     "List of list IDs to upload the contacts to.",
   )
   .option(
+    "-p, --create <prefixes...>",
+    "Create lists with given prefixes as name, then use them." +
+      " Incompatible with lists argument." +
+      " When round-robin only one list prefix can be given",
+  )
+  .option(
     "-r, --round-robin",
     "Upload each split to a separate list, round-robin.",
   )
   .action(handlerHandler(uploadContactsCommand));
+
+const listGroup = program.command("lists [lists...]");
+
+listGroup.action(handlerHandler(listListsCommand));
+
+listGroup
+  .command("delete <lists...>")
+  .action(handlerHandler(deleteListsCommand));
 
 program.parse();

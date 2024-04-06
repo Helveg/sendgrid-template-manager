@@ -14,10 +14,13 @@ import path from "path";
 import UUID from "pure-uuid";
 import { uploadContactCSV, uploadContacts } from "../contacts/contacts.util.js";
 import { UploadContactsJob } from "../contacts/contact.interfaces.js";
+import { createList } from "../lists/list.util.js";
+import { isAxiosError } from "axios";
 
 export interface UploadContactCommandOptions {
   key?: string;
   crop?: number;
+  create?: string[];
   split?: number;
   skip?: number;
   roundRobin?: boolean;
@@ -58,6 +61,12 @@ export async function uploadContactsCommand(
       title: "Prepare CSV uploads",
       task: (...args) => prepareCSV(options, ...args),
       skip: !options.crop && !options.split,
+      rendererOptions: { collapseSubtasks: false },
+    },
+    {
+      title: "Create new lists",
+      task: (...args) => createLists(options, ...args),
+      skip: !options.create?.length,
       rendererOptions: { collapseSubtasks: false },
     },
     {
@@ -137,6 +146,34 @@ async function prepareCSV(
   }
 }
 
+async function createLists(
+  options: { lists?: string[]; roundRobin?: boolean; create?: string[] },
+  ctx: UploadContactsContext,
+  task: ListrTaskWrapper<UploadContactsContext, any, any>,
+) {
+  const { lists, roundRobin, create } = options;
+  if (!create) return;
+  if (lists?.length) {
+    throw new STMError(
+      `lists and create lists argument are mutually exclusive.`,
+    );
+  }
+  if (roundRobin && create.length != 1) {
+    throw new STMError(
+      `During round-robin list creation only 1 prefix can be set, ${create.length} received.`,
+    );
+  }
+  if (roundRobin) {
+    options.lists = await Promise.all(
+      ctx.csvJobs.map((_, i) => makeList(ctx.client, `${create[0]}-${i}`)),
+    );
+  } else {
+    options.lists = await Promise.all(
+      create.map((listName) => makeList(ctx.client, listName)),
+    );
+  }
+}
+
 async function uploadCSV(
   { lists, roundRobin }: { lists?: string[]; roundRobin?: boolean },
   ctx: UploadContactsContext,
@@ -174,5 +211,24 @@ function* zip<T extends any[]>(
     let results = iterators.map((iter) => iter.next());
     if (results.some((res) => res.done)) return;
     else yield results.map((res) => res.value) as any;
+  }
+}
+
+async function makeList(client: Client, listName: string): Promise<string> {
+  try {
+    return (await createList(client, listName)).id;
+  } catch (e) {
+    if (isAxiosError(e)) {
+      if (!e.response) {
+        throw new STMError("Can't contact the SendGrid API servers.");
+      } else {
+        if (
+          e.response.data.errors[0].message == "list name is already in use"
+        ) {
+          throw new STMError(`List name '${listName}' is already in use.`);
+        }
+      }
+    }
+    throw e;
   }
 }
