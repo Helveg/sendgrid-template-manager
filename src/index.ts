@@ -1,8 +1,10 @@
 import dotenv from "dotenv";
-import { Argument, Command } from "commander";
+import { Argument, Command, Option } from "commander";
 import { listAssetsCommand } from "./commands/list-assets.command.js";
 import { STMError } from "./errors.js";
 import { applyCommand } from "./commands/apply.command.js";
+import { countContactsCommand } from "./commands/count-contacts.command.js";
+import { uploadContactsCommand } from "./commands/upload-contacts.command.js";
 
 dotenv.config();
 
@@ -13,7 +15,7 @@ program
   .description(
     "SendGrid Template Manager: A community CLI tool to manage SendGrid email templates.",
   )
-  .version("1.0.0")
+  .version("0.2.1")
   .option("--key <string>", "The SendGrid API key");
 
 function handlerHandler(f: Function) {
@@ -28,7 +30,7 @@ function handlerHandler(f: Function) {
       return await f.apply(undefined, args);
     } catch (e) {
       if (e instanceof STMError) {
-        program.error(e.message, {
+        program.error(`ERROR: ${e.message}`, {
           exitCode: e.info.exitCode ?? 1,
           code: e.info.code,
         });
@@ -57,5 +59,39 @@ program
   .option("-t, --tag", "The version name to create/update", "latest")
   .option("--activate", "Toggle to immediately activate the new version.")
   .action(handlerHandler(applyCommand));
+
+const contactGroup = program.command("contacts");
+
+contactGroup
+  .command("count", { isDefault: true })
+  .action(handlerHandler(countContactsCommand));
+
+contactGroup
+  .command("upload")
+  .argument("<csv>")
+  .addOption(
+    new Option("-c, --crop <X>", "Crop the upload CSV after X rows").argParser(
+      parseInt,
+    ),
+  )
+  .addOption(
+    new Option("-s, --split <X>", "Split the upload CSV in X parts").argParser(
+      parseInt,
+    ),
+  )
+  .addOption(
+    new Option("-k, --skip <X>", "Skip the first X CSV rows").argParser(
+      parseInt,
+    ),
+  )
+  .option(
+    "-l, --lists <lists...>",
+    "List of list IDs to upload the contacts to.",
+  )
+  .option(
+    "-r, --round-robin",
+    "Upload each split to a separate list, round-robin.",
+  )
+  .action(handlerHandler(uploadContactsCommand));
 
 program.parse();
